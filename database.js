@@ -61,8 +61,17 @@ export async function getUser(id) {
     const [row] = await pool.query(`
     SELECT * 
     FROM users 
-    WHERE id = ?
+    WHERE id_user = ?
     `, [id])
+    return row[0]
+}
+
+export async function getUserByEmail(email) {
+    const [row] = await pool.query(`
+    SELECT * 
+    FROM users 
+    WHERE email = ?
+    `, [email])
     return row[0]
 }
 
@@ -85,7 +94,7 @@ export async function getBook(id) {
     const [row] = await pool.query(`
     SELECT * 
     FROM books 
-    WHERE id = ?
+    WHERE id_book = ?
     `, [id])
     return row[0]
 }
@@ -103,17 +112,27 @@ export async function createBook(title, author, isbn, plot) {
 export async function getUserLibrary(id_user) {
     const [rows] = await pool.query(`
     SELECT * 
-    FROM userlibrary
-    WHERE id_user = ?
+    FROM books, userlibrary
+    WHERE books.id_book = userlibrary.id_book
+    AND userlibrary.id_user = ?
     `, [id_user])
     return rows
 }
 
-export async function addBookToUserLibrary(id_user, id_book) {
+export async function getUserLibraryBook(id_userlibrary) {
+    const [rows] = await pool.query(`
+    SELECT * 
+    FROM userlibrary
+    WHERE id_userlibrary = ?
+    `, [id_userlibrary])
+    return rows
+}
+
+export async function addBookToUserLibrary(id_user, id_book, added_on) {
     const [result] = await pool.query(`
-    INSERT INTO userLibrary (id_user, id_book) 
-    VALUES (?, ?, ?, ?)
-    `, [id_user, id_book])
+    INSERT INTO userlibrary (id_user, id_book, added_on) 
+    VALUES (?, ?, ?)
+    `, [id_user, id_book, added_on])
     const id = result.insertId
-    return getBook(id)
+    return getUserLibraryBook(id)
 }
