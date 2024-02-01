@@ -11,7 +11,8 @@ import {
     addBookToUserLibrary,
     getUserLibrary,
     changeReadCountOnBookFromUserLibrary,
-    updateRemovedOnBookFromUserLibrary
+    updateRemovedOnBookFromUserLibrary,
+    getBooksByTitle
 } from './database.js'
 
 
@@ -78,11 +79,18 @@ app.post('/books', async (req, res) => {
     res.status(201).send(book)
 })
 
-// Ritorna tutti i libri aggiunti dall'utente
+// Ritorna tutti i libri aggiunti dall'utente ma non quelli rimossi
 app.get('/userlibrary/:id', async (req, res) => {
     const id = req.params.id
     const userlibrary = await getUserLibrary(id)
     res.send(userlibrary)
+})
+
+// Ritorna tutti i libri che contengono nel titolo la stringa digitata
+app.get('/searchbooks/:typedString', async (req, res) => {
+    const typedString = `%${req.params.typedString}%`
+    const booksByTitle = await getBooksByTitle(typedString)
+    res.send(booksByTitle)
 })
 
 // Crea nuova relazione in userlibrary

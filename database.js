@@ -134,14 +134,26 @@ export async function createBook(title, author, isbn, plot) {
     return getBook(id)
 }
 
+// Ritorna tutti i libri che contengono nel titolo la stringa digitata
+export async function getBooksByTitle(typedString) {
+    const [rows] = await pool.query(`
+    SELECT * 
+    FROM books, userlibrary
+    WHERE books.id_book = userlibrary.id_book
+    AND books.title LIKE ?
+    `, [typedString])
+    return rows
+}
+
 // LIBRARY
-// Ritorna tutti i libri aggiunti dall'utente
+// Ritorna tutti i libri aggiunti dall'utente, ma non quelli rimossi
 export async function getUserLibrary(id_user) {
     const [rows] = await pool.query(`
     SELECT * 
     FROM books, userlibrary
     WHERE books.id_book = userlibrary.id_book
     AND userlibrary.id_user = ?
+    AND userlibrary.removed_on IS NULL
     `, [id_user])
     return rows
 }
