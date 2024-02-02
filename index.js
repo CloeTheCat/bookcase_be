@@ -12,7 +12,12 @@ import {
     getUserLibrary,
     changeReadCountOnBookFromUserLibrary,
     updateRemovedOnBookFromUserLibrary,
-    getBooksByTitle
+    getBooksByTitle,
+    getBooksByTitle2,
+
+    getUserLibraryRel,
+    getBookFromLibrary,
+    getUserLibraryRelByString,
 } from './database.js'
 
 
@@ -30,7 +35,6 @@ app.get('/', async (req, res) => {
 // Ritorna tutti gli utenti
 app.get('/users', async (req, res) => {
     const users = await getUsers()
-    console.log('users')
     res.send(users)
 })
 
@@ -72,6 +76,19 @@ app.get('/books/:id', async (req, res) => {
     res.send(book)
 })
 
+// Ritorna un singolo libro tramite id_book e accorpa dati userlibrary tramite id_user se presenti
+app.get('/bookData', async (req, res) => {
+    const { id_book, id_user } = req.query
+    const isBookInLibrary = await getUserLibraryRel(id_user, id_book)
+    if (isBookInLibrary === null || isBookInLibrary === undefined) {
+        const book = await getBook(id_book)
+        res.status(200).send(book)
+    } else {
+        const bookData = await getBookFromLibrary(isBookInLibrary.id_userlibrary)
+        res.status(200).send(bookData)
+    }
+})
+
 // Crea un nuovo libro da aggiungere alla tabella books
 app.post('/books', async (req, res) => {
     const { title, author, isbn, plot } = req.body
@@ -86,11 +103,17 @@ app.get('/userlibrary/:id', async (req, res) => {
     res.send(userlibrary)
 })
 
-// Ritorna tutti i libri che contengono nel titolo la stringa digitata
-app.get('/searchbooks/:typedString', async (req, res) => {
-    const typedString = `%${req.params.typedString}%`
-    const booksByTitle = await getBooksByTitle(typedString)
-    res.send(booksByTitle)
+// Ritorna tutti i libri che contengono nel titolo la stringa digitata e accorpa dati userlibrary tramite id_user se presenti
+app.get('/searchbooks/', async (req, res) => {
+
+    const id_user = req.query.id_user
+    const typedString = `%${req.query.typedString}%`
+    const limit = Number(req.query.limit)
+    const offset = Number(req.query.offset)
+
+    const booksByTitle2 = await getBooksByTitle2(typedString, id_user, offset, limit)
+
+    res.send(booksByTitle2)
 })
 
 // Crea nuova relazione in userlibrary

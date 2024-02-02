@@ -114,15 +114,26 @@ export async function getAllBooks() {
     return rows
 }
 
-// Ritorna un singolo libro con tutti i valori della tabella books e della tabella userlibrary
-export async function getBookData(id) {
+// Ritorna un singolo libro con tutti i valori della tabella books e della tabella userlibrary tramite id_userlibrary
+export async function getBookFromLibrary(id_userlibrary) {
     const [row] = await pool.query(`
     SELECT * 
     FROM books, userlibrary
-    WHERE id_book = ?
-    `, [id])
+    WHERE books.id_book = userlibrary.id_book
+    AND userlibrary.id_userlibrary = ?
+    `, [id_userlibrary])
     return row[0]
 }
+
+
+// id utente id libro
+// chiama id libro
+// chiama libri dell'utente
+
+// filtra per id libro
+// accorpa
+// restituisci
+
 
 // Crea un nuovo libro da aggiungere alla tabella books
 export async function createBook(title, author, isbn, plot) {
@@ -138,10 +149,22 @@ export async function createBook(title, author, isbn, plot) {
 export async function getBooksByTitle(typedString) {
     const [rows] = await pool.query(`
     SELECT * 
-    FROM books, userlibrary
-    WHERE books.id_book = userlibrary.id_book
-    AND books.title LIKE ?
+    FROM books
+    WHERE books.title LIKE ?
     `, [typedString])
+    return rows
+}
+
+// Ritorna tutti i libri che contengono nel titolo la stringa digitata
+export async function getBooksByTitle2(typedString, id_user, offset, limit) {
+    const [rows] = await pool.query(`
+    SELECT books.id_book, books.title, books.author, books.isbn, books.plot, userlibrary.id_userlibrary, userlibrary.id_user, userlibrary.added_on, userlibrary.removed_on, userlibrary.read_count
+    FROM books
+    LEFT JOIN userlibrary ON books.id_book = userlibrary.id_book 
+    AND userlibrary.id_user = ?
+    WHERE books.title LIKE ?
+    LIMIT ?, ?
+    `, [id_user, typedString, offset, limit])
     return rows
 }
 
@@ -158,24 +181,27 @@ export async function getUserLibrary(id_user) {
     return rows
 }
 
-// Ritorna i valori della userlibrary tramite id della relazione
-export async function getUserLibraryBookFromRel(id_userlibrary) {
-    const [rows] = await pool.query(`
-    SELECT * 
-    FROM userlibrary
-    WHERE id_userlibrary = ?
-    `, [id_userlibrary])
-    return rows
-}
-
 // Ritorna l'id_userlibrary tramite id_user e id_book
-export async function getUserLibraryBookId(id_user, id_book) {
-    const [result] = await pool.query(`
+export async function getUserLibraryRel(id_user, id_book) {
+    const [[result]] = await pool.query(`
     SELECT id_userlibrary
     FROM userlibrary
     WHERE id_user = ?
     AND id_book = ?
+    LIMIT 1
     `, [id_user, id_book])
+    return result
+}
+
+// Ritorna l'id_userlibrary tramite id_user e una stringa
+export async function getUserLibraryRelByString(id_user, typedString) {
+    const [[result]] = await pool.query(`
+    SELECT id_userlibrary
+    FROM userlibrary
+    WHERE id_user = ?
+    AND title = ?
+    LIMIT 1
+    `, [id_user, typedString])
     return result
 }
 
@@ -185,8 +211,7 @@ export async function addBookToUserLibrary(id_user, id_book, added_on) {
     INSERT INTO userlibrary (id_user, id_book, added_on) 
     VALUES (?, ?, ?)
     `, [id_user, id_book, added_on])
-    const id = result.insertId
-    return getUserLibraryBookFromRel(id)
+    return result
 }
 
 // Modifica il campo removed_on in una relazione esistente
@@ -196,7 +221,7 @@ export async function updateRemovedOnBookFromUserLibrary(removed_on, id_userlibr
     SET removed_on = ?
     WHERE id_userlibrary = ?
     `, [removed_on, id_userlibrary])
-    return getUserLibraryBookFromRel(id_userlibrary)
+    return result
 }
 
 // Modifica il campo read_count in una relazione esistente
@@ -206,5 +231,5 @@ export async function changeReadCountOnBookFromUserLibrary(read_count, id_userli
     SET read_count = ?
     WHERE id_userlibrary = ?
     `, [read_count, id_userlibrary])
-    return getUserLibraryBookFromRel(id_userlibrary)
+    return result
 }
