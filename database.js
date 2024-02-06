@@ -45,7 +45,7 @@ pool.query(`
         id_book INT AUTO_INCREMENT, 
         title VARCHAR(255) NOT NULL, 
         author VARCHAR(255),
-        isbn INT UNIQUE,
+        isbn VARCHAR(255) UNIQUE,
         plot VARCHAR(10000),
         PRIMARY KEY (id_book)
     )
