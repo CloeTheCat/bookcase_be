@@ -1,27 +1,31 @@
-version: "2"
+version: '3.8'
+
 
 services:
-  node:
-    image: "node:8"
-    user: "node"
-    working_dir: /home/node/app
-    environment:
-      - NODE_ENV=production
-    volumes:
-      - ./:/home/node/app
-    expose:
-      - "8081"
-    command: "npm start"
-
   db:
     image: mysql
-    command: --default-authentication-plugin=mysql_native_password
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: example
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+    volumes: 
+      - my-db:/var/lib/mysql
 
-  adminer:
-    image: adminer
+  app:
+    depends_on:
+      - db
+    build: ./app
+    ports: 
+      - '8080:8080'
+    environment: 
+      - DB_HOST=db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=3306
     restart: always
-    ports:
-      - 8080:8080
+
+
+volumes: 
+  my-db:

@@ -1,7 +1,7 @@
 FROM node:16
 
 # set a directory for the app
-WORKDIR /usr/src/app
+WORKDIR /app
 
 # copy all the files to the container
 COPY . .

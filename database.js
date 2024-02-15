@@ -8,13 +8,13 @@ const pool = mysql.createPool({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
-    database: process.env.DATABASE,
+    database: process.env.DB_NAME,
 });
 
 
-pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DATABASE}`);
+pool.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
 
-pool.query(`USE ${process.env.DATABASE}`);
+pool.query(`USE ${process.env.DB_NAME}`);
 
 pool.query(`
     CREATE TABLE IF NOT EXISTS users (
